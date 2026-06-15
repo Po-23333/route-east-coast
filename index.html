@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>花東光域 Route East — Scroll Travel Experience</title>
+
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --cream: #f8f1e5;
+      --ink: #18200f;
+      --muted: rgba(24, 32, 15, .62);
+      --line: rgba(24, 32, 15, .12);
+      --green: #5b7b2a;
+      --yellow: #e6c921;
+      --blue: #84a9d9;
+      --brown: #5a321f;
+      --progress: 0;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: "Noto Sans TC", "Microsoft JhengHei", system-ui, -apple-system, sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(255,255,255,.75), transparent 24%),
+        radial-gradient(circle at 82% 18%, rgba(132,169,217,.22), transparent 26%),
+        radial-gradient(circle at 52% 82%, rgba(230,201,33,.16), transparent 30%);
+      z-index: -2;
+    }
+
+    .grain {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      opacity: .12;
+      z-index: 80;
+      background-image:
+        linear-gradient(rgba(24,32,15,.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(24,32,15,.12) 1px, transparent 1px);
+      background-size: 38px 38px;
+      mask-image: radial-gradient(circle at center, black, transparent 78%);
+      -webkit-mask-image: radial-gradient(circle at center, black, transparent 78%);
+    }
+
+    nav {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: min(1160px, calc(100% - 34px));
+      height: 60px;
+      padding: 0 18px 0 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-radius: 999px;
+      z-index: 70;
+      background: rgba(248,241,229,.68);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      border: 1px solid rgba(255,255,255,.62);
+      box-shadow: 0 18px 70px rgba(64, 44, 22, .10);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 900;
+      letter-spacing: -.04em;
+      cursor: pointer;
+    }
+
+    .brand-mark {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--yellow);
+      box-shadow: 0 0 0 7px rgba(230,201,33,.22);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 24px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .nav-links span {
+      cursor: pointer;
+      font-weight: 600;
+      transition: color 0.3s ease;
+    }
+
+    .nav-links span:hover, .nav-links span.active {
+      color: var(--green);
+    }
+
+    .cta {
+      border: 0;
+      color: #fff9ed;
+      background: var(--ink);
+      border-radius: 999px;
+      padding: 11px 17px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+    
+    .cta:hover {
+      background: var(--green);
+      transform: scale(1.05);
+    }
+
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 112px 7vw 56px;
+    }
+
+    .hero-grid {
+      width: min(1240px, 100%);
+      display: grid;
+      grid-template-columns: 1.02fr .98fr;
+      gap: 5vw;
+      align-items: center;
+    }
+
+    .kicker {
+      font-size: 13px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--green);
+      font-weight: 900;
+      margin-bottom: 24px;
+    }
+
+    .hero h1 {
+      font-size: clamp(60px, 8.5vw, 140px);
+      line-height: .92;
+      letter-spacing: -.07em;
+      font-weight: 900;
+      max-width: 760px;
+    }
+
+    .hero h1 span { display: block; }
+
+    .hero p {
+      margin-top: 28px;
+      max-width: 560px;
+      color: var(--muted);
+      font-size: clamp(18px, 1.7vw, 25px);
+      line-height: 1.75;
+      letter-spacing: -.02em;
+    }
+
+    .hero-actions {
+      margin-top: 36px;
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .ghost {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.35);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 13px 18px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .ghost:hover {
+      background: rgba(255,255,255,.8);
+    }
+
+    .hero-photo {
+      position: relative;
+      min-height: min(78vh, 720px);
+      border-radius: 42px;
+      overflow: hidden;
+      background: #d9d2be;
+      box-shadow: 0 42px 120px rgba(66, 48, 18, .18);
+      transform: perspective(1200px) rotateY(-5deg) rotateX(3deg);
+    }
+
+    .hero-photo img {
+      width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0;
+      transform: scale(1.02);
+    }
+
+    .hero-photo::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to top, rgba(0,0,0,.18), transparent 54%);
+    }
+
+    .photo-caption {
+      position: absolute;
+      left: 24px;
+      right: 24px;
+      bottom: 24px;
+      z-index: 2;
+      color: #fff9ed;
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 24px;
+      font-size: 13px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .story {
+      position: relative;
+      height: 560vh;
+      background: #efe4cf;
+    }
+
+    .sticky {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .stage {
+      position: relative;
+      width: 100%; height: 100%;
+      display: grid;
+      place-items: center;
+      background: #efe4cf;
+      transition: background .3s linear;
+    }
+
+    .image-stack {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+    }
+
+    .layer {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity .12s linear;
+      overflow: hidden;
+    }
+
+    .layer img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scale(var(--zoom, 1.08)) translateY(var(--pan, 0px));
+      filter: saturate(1.08) contrast(1.02);
+    }
+
+    .layer::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(10,12,7,.58), rgba(10,12,7,.18) 42%, rgba(10,12,7,.20)),
+        linear-gradient(to top, rgba(10,12,7,.50), transparent 54%);
+      opacity: var(--shade, .85);
+    }
+
+    .cinema-frame {
+      position: absolute;
+      inset: 8vh 7vw;
+      border: 1px solid rgba(255,255,255,.32);
+      border-radius: 38px;
+      z-index: 5;
+      pointer-events: none;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,.08);
+    }
+
+    .story-copy {
+      position: absolute;
+      left: 8vw;
+      bottom: 13vh;
+      width: min(760px, 84vw);
+      color: #fff9ed;
+      z-index: 10;
+      opacity: var(--copy-opacity, 1);
+      transform: translateY(var(--copy-y, 0px));
+    }
+
+    .scene-label {
+      font-size: 13px;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: rgba(255,249,237,.72);
+      font-weight: 900;
+      margin-bottom: 18px;
+    }
+
+    .story-copy h2 {
+      font-size: clamp(46px, 7vw, 112px);
+      line-height: .95;
+      letter-spacing: -.075em;
+      font-weight: 900;
+      text-wrap: balance;
+    }
+
+    .story-copy p {
+      margin-top: 22px;
+      max-width: 620px;
+      font-size: clamp(18px, 1.9vw, 26px);
+      line-height: 1.68;
+      color: rgba(255,249,237,.78);
+      letter-spacing: -.02em;
+    }
+
+    .scene-card {
+      position: absolute;
+      right: 8vw;
+      top: 18vh;
+      z-index: 12;
+      width: min(350px, 82vw);
+      border-radius: 30px;
+      padding: 24px;
+      color: #fff9ed;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.24);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      box-shadow: 0 30px 100px rgba(0,0,0,.18);
+      opacity: var(--card-opacity, 1);
+      transform: translateY(var(--card-y, 0px));
+    }
+
+    .scene-card small {
+      display: block;
+      color: rgba(255,249,237,.64);
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      margin-bottom: 14px;
+      font-weight: 900;
+    }
+
+    .scene-card strong {
+      display: block;
+      font-size: 28px;
+      line-height: 1.12;
+      letter-spacing: -.045em;
+      margin-bottom: 14px;
+    }
+
+    .scene-card span {
+      color: rgba(255,249,237,.72);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    .progress {
+      position: absolute;
+      left: 50%;
+      bottom: 36px;
+      transform: translateX(-50%);
+      z-index: 20;
+      display: flex;
+      gap: 8px;
+    }
+
+    .progress i {
+      display: block;
+      width: 46px;
+      height: 3px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.28);
+      overflow: hidden;
+    }
+
+    .progress i span {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: #fff9ed;
+    }
+
+    .route {
+      background: var(--cream);
+      padding: 120px 7vw;
+    }
+
+    .route-inner {
+      width: min(1180px, 100%);
+      margin: auto;
+      display: grid;
+      grid-template-columns: .95fr 1.05fr;
+      gap: 6vw;
+      align-items: start;
+    }
+
+    .route h2 {
+      font-size: clamp(48px, 7vw, 108px);
+      line-height: .95;
+      letter-spacing: -.075em;
+      font-weight: 900;
+      position: sticky;
+      top: 120px;
+    }
+
+    .route-list {
+      display: grid;
+      gap: 18px;
+    }
+
+    .route-item {
+      display: grid;
+      grid-template-columns: 78px 1fr;
+      gap: 20px;
+      padding: 26px;
+      border-radius: 28px;
+      background: rgba(255,255,255,.46);
+      border: 1px solid rgba(255,255,255,.7);
+      box-shadow: 0 26px 80px rgba(64,44,22,.07);
+    }
+
+    .route-item .num {
+      font-size: 36px;
+      line-height: 1;
+      font-weight: 900;
+      color: var(--green);
+      letter-spacing: -.06em;
+    }
+
+    .route-item h3 {
+      font-size: 24px;
+      letter-spacing: -.04em;
+      margin-bottom: 8px;
+    }
+
+    .route-item p {
+      color: var(--muted);
+      line-height: 1.75;
+    }
+
+    .final {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 120px 7vw;
+      background: #12200e;
+      color: #fff9ed;
+    }
+
+    .final h2 {
+      font-size: clamp(56px, 8vw, 132px);
+      line-height: .92;
+      letter-spacing: -.085em;
+      font-weight: 900;
+      margin-bottom: 26px;
+    }
+
+    .final p {
+      max-width: 720px;
+      margin: auto;
+      color: rgba(255,249,237,.72);
+      font-size: clamp(18px, 2vw, 26px);
+      line-height: 1.7;
+      letter-spacing: -.02em;
+    }
+
+    .final button {
+      margin-top: 42px;
+      border: 0;
+      color: #12200e;
+      background: #fff9ed;
+      border-radius: 999px;
+      padding: 16px 28px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .final button:hover {
+      transform: scale(1.05);
+    }
+
+    @media (max-width: 900px) {
+      nav { height: 56px; }
+      .nav-links { display: none; }
+      .hero-grid, .route-inner { grid-template-columns: 1fr; }
+      .hero-photo { min-height: 58vh; transform: none; border-radius: 30px; }
+      .story { height: 520vh; }
+      .cinema-frame { inset: 7vh 18px; border-radius: 28px; }
+      .story-copy { left: 28px; bottom: 13vh; width: calc(100% - 56px); }
+      .scene-card { left: 28px; right: 28px; top: 12vh; width: auto; }
+      .route h2 { position: static; }
+      .route-item { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="grain"></div>
+
+  <nav>
+    <div class="brand" id="logoBrand"><span class="brand-mark"></span>花東光域</div>
+    <div class="nav-links">
+      <span data-scene="0">花海</span>
+      <span data-scene="1">山線</span>
+      <span data-scene="2">鐵道</span>
+      <span data-scene="3">食味</span>
+    </div>
+    <button class="cta" id="navCtaBtn">規劃旅程</button>
+  </nav>
+
+  <section class="hero">
+    <div class="hero-grid">
+      <div>
+        <div class="kicker">Route East Coast / Hualien × Taitung</div>
+        <h1>
+          <span>把春天，</span>
+          <span>開成一趟</span>
+          <span>花東旅行。</span>
+        </h1>
+        <p>
+          從油菜花海、山脈與列車，到旅途中熱騰騰的一餐。沿著東海岸的風，這是一段隨著步伐徐徐展開的花東風景故事。
+        </p>
+        <div class="hero-actions">
+          <button class="cta" id="startExploreBtn">開始探索</button>
+          <button class="ghost" id="viewRouteBtn">查看建議路線</button>
+        </div>
+      </div>
+
+      <div class="hero-photo">
+        <img src="assets/flower-close.jpg" alt="花東油菜花特寫">
+        <div class="photo-caption">
+          <span>Field / Yellow Bloom</span>
+          <span>Scroll Story</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="story" id="story">
+    <div class="sticky">
+      <div class="stage" id="stage">
+        <div class="image-stack">
+          <div class="layer"><img src="assets/flower-close.jpg" alt="花東油菜花特寫"></div>
+          <div class="layer"><img src="assets/flower-field.jpg" alt="花東油菜花田與蝴蝶"></div>
+          <div class="layer"><img src="assets/train-mountain.jpg" alt="花東山脈與列車"></div>
+          <div class="layer"><img src="assets/food.jpg" alt="旅途中在地小吃"></div>
+        </div>
+
+        <div class="cinema-frame"></div>
+
+        <div class="story-copy" id="storyCopy">
+          <div class="scene-label" id="sceneLabel">01 / Bloom</div>
+          <h2 id="sceneTitle">從一朵花開始。</h2>
+          <p id="sceneText">先靠近，再出發。花東的旅程不急著介紹景點，而是從一個安靜的春天細節開始。</p>
+        </div>
+
+        <div class="scene-card" id="sceneCard">
+          <small id="cardKicker">Details</small>
+          <strong id="cardTitle">微小的春意。</strong>
+          <span id="cardText">蹲下身，觀察葉脈與光影。花東的步調，就藏在這些不起眼的角落裡，等待被輕輕拾起。</span>
+        </div>
+
+        <div class="progress" id="progress">
+          <i><span></span></i><i><span></span></i><i><span></span></i><i><span></span></i>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="route" id="routeSection">
+    <div class="route-inner">
+      <h2>一天裡，走過花、山、鐵道與食味。</h2>
+
+      <div class="route-list">
+        <div class="route-item">
+          <div class="num">01</div>
+          <div>
+            <h3>上午｜花田散步</h3>
+            <p>以油菜花田作為旅程開場，適合拍照、散步，在柔和的晨光中建立對這片土地的第一印象。</p>
+          </div>
+        </div>
+
+        <div class="route-item">
+          <div class="num">02</div>
+          <div>
+            <h3>中午｜沿山線前進</h3>
+            <p>把山脈與列車作為視覺主軸，隨著鐵道的延伸，感受自己正在穿越壯麗的花東縱谷。</p>
+          </div>
+        </div>
+
+        <div class="route-item">
+          <div class="num">03</div>
+          <div>
+            <h3>傍晚｜在地食味收尾</h3>
+            <p>旅遊不只看風景，也要有味覺記憶。最後用一份熱食把整趟旅程收束起來。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="final" id="finalSection">
+    <div>
+      <h2>花東，不只是目的地。</h2>
+      <p>它是一段可以被慢慢展開的風景。讓心境隨著路途推進，在真正出發前，靈魂就已經抵達。</p>
+      <button id="finalPlanBtn">開始規劃花東行程</button>
+    </div>
+  </section>
+
+  <script>
+    const story = document.querySelector("#story");
+    const stage = document.querySelector("#stage");
+    const layers = document.querySelectorAll(".layer");
+    const dots = document.querySelectorAll(".progress span");
+    const storyCopy = document.querySelector("#storyCopy");
+    const sceneCard = document.querySelector("#sceneCard");
+    const sceneLabel = document.querySelector("#sceneLabel");
+    const sceneTitle = document.querySelector("#sceneTitle");
+    const sceneText = document.querySelector("#sceneText");
+    const cardKicker = document.querySelector("#cardKicker");
+    const cardTitle = document.querySelector("#cardTitle");
+    const cardText = document.querySelector("#cardText");
+    const navLinksList = document.querySelectorAll(".nav-links span");
+
+    const scenes = [
+      {
+        label: "01 / Bloom",
+        title: "從一朵花開始。",
+        text: "先靠近，再出發。花東的旅程不急著介紹景點，而是從一個安靜的春天細節開始。",
+        cardKicker: "Details",
+        cardTitle: "微小的春意。",
+        cardText: "蹲下身，觀察葉脈與光影。花東的步調，就藏在這些不起眼的角落裡，等待被輕輕拾起。",
+        bg: "#efe4cf"
+      },
+      {
+        label: "02 / Field",
+        title: "花海向外展開。",
+        text: "視角從一朵花拉遠，蝴蝶、天空與整片花田出現，旅程開始有了廣度。",
+        cardKicker: "Breeze",
+        cardTitle: "走進黃色海浪。",
+        cardText: "微風拂過，整片油菜花田隨之搖曳。不需要趕路，讓自己成為這片自然畫布裡的一部分。",
+        bg: "#d9c88d"
+      },
+      {
+        label: "03 / Railway",
+        title: "沿著山脈，坐上列車。",
+        text: "花東最迷人的不是單一景點，而是移動過程本身。山、雲、鐵道，把旅程串成一條線。",
+        cardKicker: "Journey",
+        cardTitle: "伴隨喀噠聲前行。",
+        cardText: "倚靠在車窗邊，看著連綿的山脈向後退去。在花東，沿途的風景本身就是最浪漫的目的地。",
+        bg: "#b8c7d6"
+      },
+      {
+        label: "04 / Taste",
+        title: "最後，用味道記住旅程。",
+        text: "旅行的結尾不一定是風景，也可以是一口熱食。食物讓花東的記憶更完整。",
+        cardKicker: "Warmth",
+        cardTitle: "一口純粹的滿足。",
+        cardText: "熱氣騰騰的在地日常，驅散了旅途的疲憊。用最樸實的味覺，將這趟旅行深深烙印在心裡。",
+        bg: "#332822"
+      }
+    ];
+
+    function clamp(value, min, max) {
+      return Math.min(Math.max(value, min), max);
+    }
+
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    function update() {
+      const rect = story.getBoundingClientRect();
+      const total = story.offsetHeight - window.innerHeight;
+      const progress = clamp(-rect.top / total, 0, 1);
+
+      const raw = progress * scenes.length;
+      const index = clamp(Math.floor(raw), 0, scenes.length - 1);
+      const local = raw - index;
+      const scene = scenes[index];
+
+      stage.style.background = scene.bg;
+
+      sceneLabel.textContent = scene.label;
+      sceneTitle.textContent = scene.title;
+      sceneText.textContent = scene.text;
+      cardKicker.textContent = scene.cardKicker;
+      cardTitle.textContent = scene.cardTitle;
+      cardText.textContent = scene.cardText;
+
+      const appear = local < .55 ? local / .55 : (1 - local) / .45;
+      const copyOpacity = clamp(.18 + appear * .82, 0, 1);
+      storyCopy.style.setProperty("--copy-opacity", copyOpacity);
+      storyCopy.style.setProperty("--copy-y", `${lerp(32, 0, copyOpacity)}px`);
+
+      sceneCard.style.setProperty("--card-opacity", clamp(.22 + appear * .78, 0, 1));
+      sceneCard.style.setProperty("--card-y", `${lerp(26, 0, appear)}px`);
+
+      layers.forEach((layer, i) => {
+        let distance = Math.abs(i - raw);
+        let opacity = clamp(1 - distance, 0, 1);
+        if (i === scenes.length - 1 && progress === 1) opacity = 1;
+
+        const zoom = lerp(1.18, 1.04, clamp(local, 0, 1));
+        const pan = lerp(22, -22, progress);
+
+        layer.style.opacity = opacity;
+        layer.style.setProperty("--zoom", zoom + i * .018);
+        layer.style.setProperty("--pan", `${pan}px`);
+        layer.style.setProperty("--shade", i === 3 ? ".72" : ".82");
+      });
+
+      dots.forEach((dot, i) => {
+        if (i < index) dot.style.width = "100%";
+        else if (i === index) dot.style.width = `${local * 100}%`;
+        else dot.style.width = "0%";
+      });
+
+      navLinksList.forEach((link, i) => {
+        if (i === index && rect.top <= 0 && rect.bottom >= window.innerHeight) {
+          link.classList.add('active');
+        } else {
+          link.classList.remove('active');
+        }
+      });
+
+      requestAnimationFrame(update);
+    }
+
+    update();
+
+    // Navigation and Routing Logic
+    navLinksList.forEach(link => {
+      link.addEventListener('click', (e) => {
+        const sceneIndex = parseInt(e.target.getAttribute('data-scene'));
+        const storyTop = window.scrollY + story.getBoundingClientRect().top;
+        const totalScrollable = story.offsetHeight - window.innerHeight;
+        
+        // Scroll to the specific scene's start point
+        const targetY = storyTop + (sceneIndex / scenes.length) * totalScrollable + 5; 
+        window.scrollTo({ top: targetY, behavior: 'smooth' });
+      });
+    });
+
+    document.getElementById('logoBrand').addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    const routeSection = document.getElementById('routeSection');
+    
+    document.getElementById('startExploreBtn').addEventListener('click', () => {
+      const storyTop = window.scrollY + story.getBoundingClientRect().top;
+      window.scrollTo({ top: storyTop + 5, behavior: 'smooth' });
+    });
+
+    document.getElementById('navCtaBtn').addEventListener('click', () => {
+      routeSection.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    document.getElementById('viewRouteBtn').addEventListener('click', () => {
+      routeSection.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    document.getElementById('finalPlanBtn').addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      alert("開始規劃旅程！");
+    });
+  </script>
+</body>
+</html>
